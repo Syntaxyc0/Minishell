@@ -1,0 +1,33 @@
+Lexer Parser
+
+1. lire ligne renvoyee par readline caractere par caractere
+2. stocker chaque caractere dans une liste chainee contenant le caractere et son token
+
+proto :
+
+typedef struct s_letter
+{
+	char	letter;
+	int		token;
+	t_letter *prev;	
+	t_letter *next;
+}
+
+les token etant divises en plusieurs categories:
+-mot
+-dollar
+-espace
+-redir
+-pipe
+-quote
+-double quote
+
+3. regrouper les lettres en mots en regardant les lettres adjacentes dans une struct et commencer l'analyse grammaticale
+
+exemples: 
+	-une ligne de commande ne peut pas commencer ou se terminer par un pipe
+	-un nombre de quote ou double quote souleve une erreur de syntaxe
+	-les espaces ne sont pas consideres sauf si dans des quotes, auquel cas is sont consideres comme des mots
+	-il ne peut pas y avoir plus de 2 redir successives, les mots sont entoures au maximum de 4 redir
+
+4. 
