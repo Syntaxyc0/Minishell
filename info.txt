@@ -54,7 +54,7 @@ struct s_command
 {
 	char *fullpath;
 	char **args;
-	struct s_redir;
+	struct s_redir redir;;
 	int fd[2];
 }
 
@@ -79,10 +79,39 @@ exec --> check redir --> modif fds selon redir --> check builtin:
 
 application modif redir avant de fork et d'exec:
 
+
 - IN:
+
 
 if (!filename)
 	error;
+else if (filename n'existe pas, i.e. no such file)
+	error;
 else
-	
+	cmd->redir->fd[READ] = open(filename); (si pas d'erreur)
 
+
+- OUT
+
+
+if (!filename)
+	error;
+else if (filename n'existe pas, i.e. no such file)
+{
+	on s'en fout, on cree;
+	open avec flags, (O_TRUNC, O_CREAT, et droits 0644);
+	cmd->redir->fd[WRITE] = open(filename, flags);
+}
+
+
+- APPEND
+
+
+if (!filename)
+	error;
+else if (filename n'existe pas, i.e. no such file)
+{
+	on s'en fout, on cree;
+	open avec flags, (O_TRUNC, O_CREAT, O_APPEND, et droits 0644);
+	cmd->redir->fd[WRITE] = open(filename, flags);
+}
