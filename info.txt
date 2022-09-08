@@ -9,9 +9,8 @@ typedef struct s_letter
 {
 	char	letter;
 	int		token;
-	t_letter *prev;	
 	t_letter *next;
-}
+} t_letter;
 
 les token etant divises en plusieurs categories:
 -mot
@@ -31,3 +30,59 @@ exemples:
 	-il ne peut pas y avoir plus de 2 redir successives, les mots sont entoures au maximum de 4 redir
 
 4. 
+
+logique parsing:
+-si on rencontre un pipe--> avant pipe = command && apres pipe = command
+
+(char **args) PIPE (char **args)
+
+
+
+
+
+
+(...)
+
+
+
+executions des commandes
+
+
+-struct command
+
+struct s_command
+{
+	char *fullpath;
+	char **args;
+	struct s_redir;
+	int fd[2];
+}
+
+enum type
+{
+	IN = 1;
+	OUT = 2;
+	APPEND = 3;
+	HEREDOC = 4;
+}
+
+struct s_redir
+{
+	char *filename;
+	int type;
+}
+
+exec --> check redir --> modif fds selon redir --> check builtin:
+--> si builtin builtin(cmd->args)
+--> si pas builtin execve(cmd->fullpath, cmd->args)
+
+
+application modif redir avant de fork et d'exec:
+
+- IN:
+
+if (!filename)
+	error;
+else
+	
+
