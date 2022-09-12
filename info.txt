@@ -115,3 +115,6 @@ else if (filename n'existe pas, i.e. no such file)
 	open avec flags, (O_TRUNC, O_CREAT, O_APPEND, et droits 0644);
 	cmd->redir->fd[WRITE] = open(filename, flags);
 }
+
+/!\ erreurs:
+segfault sur cd .. si on supprime le répertoire parent, ou si on supprime le repertoire actuel -> changer de dir vers le dernier visité
