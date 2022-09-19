@@ -3,8 +3,8 @@
 void    init_myenv(t_mini *mini, char *key, char *value)
 {
     mini->myenv = malloc(sizeof(t_env));
-    mini->myenv->key = ft_strdup(key);
-    mini->myenv->value = ft_strdup(value);
+    mini->myenv->key = ft_strdup(key); // TODO gérer erreurs
+    mini->myenv->value = ft_strdup(value); // TODO gérer erreurs
     mini->myenv->next = NULL;
 }
 
@@ -37,9 +37,9 @@ void    add_envelem(t_mini *mini, char *key, char *value)
     tmp = mini->myenv;
     ret = malloc(sizeof(t_env));
     if (!ret)
-        exit(EXIT_FAILURE);
+        exit(EXIT_FAILURE); // TODO gérer erreurs
     ret->key = ft_strdup(key);
-    ret->value = ft_strdup(value);
+    ret->value = ft_strdup(value);// TODO gérer erreurs
     ret->next = NULL;
     while (mini->myenv->next != NULL)
         mini->myenv = mini->myenv->next;
@@ -96,7 +96,7 @@ void    init_letters(t_mini *mini, char c, int type)
     ret = malloc(sizeof(t_letters));
     if (!ret)
     {
-        free_env(mini);
+        free_env(mini); // TODO gérer erreurs
         free(mini);
         exit(1);
     }
@@ -144,7 +144,7 @@ void    add_letter(t_mini *mini, char c)
         new = malloc(sizeof(t_letters));
         if (!new)
         {
-            free_env(mini);
+            free_env(mini); // TODO gérer erreurs
             free(mini);
             exit(1);
         }
@@ -183,32 +183,248 @@ void    free_letters(t_mini *mini)
     }
 }
 
+
+void	free_words(t_mini *mini)
+{
+	t_words	*tmp;
+	t_words	*tofree;
+	
+	tmp = mini->words;
+	while (tmp != NULL)
+	{
+		tofree = tmp;
+		tmp = tmp->next;
+		free(tofree->value);
+		free(tofree);
+	}
+}
+
 void    free_mini(t_mini *mini)
 {
     if (mini->myenv)
         free_env(mini);
     if (mini->letters)
         free_letters(mini);
+	if (mini->words)
+		free_words(mini);
     free(mini);
 }
 
+void	init_words(t_mini *mini, char *word, int type)
+{
+	t_words	*ret;
+
+	ret = malloc(sizeof(t_words)); // TODO gérer erreurs
+	if (!ret)
+	{
+		free_mini(mini);
+		exit(1);
+	}
+	ret->value = word;
+	ret->type = type;
+	ret->next = NULL;
+	mini->words = ret;
+}
+
+void	add_words_elem(t_mini *mini, t_words *word)
+{
+	t_words	*tmp;
+	t_words	*new;
+
+	tmp = mini->words;
+	if (tmp == NULL)
+	{
+		mini->words = word;
+		return ;
+	}
+	while (tmp->next != NULL)
+		tmp = tmp->next;
+	tmp->next = word;
+}
+
+size_t	get_word_len(t_letters	*letters)
+{
+	size_t			len;
+	t_letters	*tmp;
+
+	len = 0;
+	tmp = letters;
+	while (tmp != NULL && tmp->type == WORD)
+	{
+		len++;
+		tmp = tmp->next;
+	}
+	return (len);
+}
+
+void	get_word(t_mini *mini, t_letters *letters)
+{
+	 t_words	*word;
+	 int	i;
+	
+	 i = 0;
+	 word = malloc(sizeof(t_words));
+	 if (!word)
+	 {
+		free_mini(mini);
+		exit(1);
+	 }
+	 word->type = WORD;
+	 word->value = malloc(get_word_len(letters) + 1);
+	 word->next = NULL;
+	 if (!word->value)
+	 {
+		free_mini(mini);
+		exit(1);
+	 }
+	 while (letters != NULL && letters->type == WORD)
+	 {
+		word->value[i++] = letters->value;
+		letters = letters->next;
+	 }
+	 word->value[i] = '\0';
+	 add_words_elem(mini, word);
+}
+
+void	get_redir_in(t_mini *mini, t_letters *letters)
+{
+	t_words	*ret;
+
+	ret = malloc(sizeof(t_words));
+	if (!ret)
+	{
+		free_mini(mini);
+		exit(1);
+	}
+	if (letters->next != NULL && letters->next->type == IN)
+	{
+			ret->value = ft_strdup("<<");
+			ret->type = HEREDOC;
+	}
+	else
+	{
+		ret->value = ft_strdup("<");
+		ret->type = IN;
+	}
+	if (!ret->value)
+	{
+		free_mini(mini);
+		exit(1);
+	}
+	add_words_elem(mini, ret);
+}
+
+void	get_redir_out(t_mini *mini, t_letters *letters)
+{
+	t_words	*ret;
+
+	ret = malloc(sizeof(t_words));
+	if (!ret)
+	{
+		free_mini(mini);
+		exit(1);
+	}
+	if (letters->next != NULL && letters->next->type == OUT)
+	{
+			ret->value = ft_strdup(">>");
+			ret->type = APPEND;
+	}
+	else
+	{
+		ret->value = ft_strdup(">");
+		ret->type = OUT;
+	}
+	if (!ret->value)
+	{
+		free_mini(mini);
+		exit(1);
+	}
+	add_words_elem(mini, ret);
+}
+
+void	get_doll(t_mini *mini, t_letters *letters)
+{
+	t_words	*ret;
+
+	ret = malloc(sizeof(t_words));
+	if (!ret)
+	{
+		free_mini(mini);
+		exit(1);
+	}
+	if (letters->next != NULL && letters->next->type == QM)
+	{
+		ret->value = ft_strdup("$?");
+		ret->type = DOLLQM;
+	}
+	else
+	{
+		ret->value = ft_strdup("$");
+		ret->type = DOLL;
+	}
+	if (!ret->value)
+	{
+		free_mini(mini);
+		exit(1);
+	}
+	add_words_elem(mini, ret);
+}
+
+int	check_closed_quote(t_letters *letters, int type)
+{
+	t_letters *tmp;
+
+	tmp = letters;
+	if (type == QUOTE)
+	{
+		while (tmp->next != NULL)
+		{
+			if (tmp->next->type == QUOTE)
+				return (1);
+			tmp = tmp->next;
+		}
+	}
+	else if (type == DQUOTE)
+	{
+		while (tmp->next != NULL)
+		{
+			if (tmp->next->type == DQUOTE)
+				return (1);
+			tmp = tmp->next;
+		}
+	}
+	return (0);
+}
+
+void	get_quotes(t_mini *mini, t_letters *letters)
+{
+	t_words *ret;
+	if (letters->type == QUOTE)
+	{
+		while()
+	}
+}
 
 int main(int argc, char **argv, char **env)
 {
     t_mini *mini;
     t_letters   *tmp;
+	t_words		*tmp_word;
 
     mini = malloc(sizeof(t_mini));
     mini->myenv = NULL;
     mini->letters = NULL;
+	mini->words = NULL;
     get_env(env, mini);
     parse_letters(mini, argv[1]);
     tmp = mini->letters;
+	get_word(mini, tmp);
     while (tmp != NULL)
     {
         printf("char = %c\ntype = %d\n", tmp->value, tmp->type);
         printf("\n");
-        tmp = tmp->next;
+		tmp = tmp->next;
     }
+	printf("%s\n", mini->words->value);
     free_mini(mini);
 }

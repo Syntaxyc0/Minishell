@@ -2,6 +2,7 @@
 # define MINISHELL_H
 
 # include "./libft/include/libft.h"
+# include <stdio.h>
 
 typedef struct s_env
 {
@@ -30,6 +31,7 @@ typedef struct s_mini
 {
     t_env   *myenv;
     t_letters   *letters;
+	t_words		*words;
 }   t_mini;
 
 enum letter_type
@@ -40,17 +42,16 @@ enum letter_type
     DOLL = 4,
     PIPE = 5,
     QUOTE = 6,
-    DQUOTE = 7
+    DQUOTE = 7,
+	QM = 8
 };
 
 enum word_type
 {
-    WORD = 1,
-    IN = 2,
-    OUT = 3,
-    HEREDOC = 4,
-    APPEND = 5,
-    COMMAND = 6
-}
+    HEREDOC = 8,
+    APPEND = 9,
+    COMMAND = 10,
+	DOLLQM = 11
+};
 
 #endif
